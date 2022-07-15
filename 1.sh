@@ -26,7 +26,6 @@ do
 	else echo "$I" >> $TOP
     fi
 done
-rm -f /файл/спящих/компьютеров.txt #чистим файл для wol, т.к. он больше не нужен
 
 #подключение и выполнение команд
 for H in $(cat $TOP)
@@ -53,3 +52,27 @@ expect eof
 expect -c "$COMM" >> $LOG
 echo ======================================= >> $LOG
 done
+#выключение компов что мы разбудили
+for S in $(cat /файл/спящих/компьютеров.txt)
+do
+    grep $S /файл/отключенных/компьютеров.txt &> /dev/null
+	if [[ $? -ne 0 ]]
+	then COMM="
+	set timeout 5
+	spawn ssh пользователь@$S
+	#логинимся
+	expect \"*(yes/no)?*\" {send \"yes\r\"}
+	expect \"password:\" {send \"1\r\"}
+	expect \"*>\"
+	send \"su-\r\"
+	expect \"Password:\" {send \"$PASS\r\"}
+
+	#здесь могли быть ваши команды
+	expect \"*#\"
+	send \"poweroff\r\"
+	expect eof
+	"
+	expect -c "$COMM" >> $LOG
+    fi
+done
+rm -f /home/admin/1.txt #чистим файл для wol, т.к. он больше не нужен
